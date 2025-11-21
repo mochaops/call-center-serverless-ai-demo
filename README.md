@@ -1,7 +1,7 @@
 aws polly synthesize-speech \
   --voice-id Miguel \
   --output-format mp3 \
-  --text "Hola, este es un mensaje de prueba para Amazon Connect. Esta llamada debe ser transcrita y procesada por nuestra lambda." \
+  --text "Hola, solo quiero quejarme mucho de los repartidores que dejaron mi paquete afuera de mi domicilio y no preguntaron por mi, muy poco profesionales." \
   prueba-miguel.mp3
 
 aws polly synthesize-speech \
@@ -48,4 +48,21 @@ aws polly synthesize-speech \
       }
     }
   ]
+}
+
+
+{
+  "version": "0",
+  "id": "11111111-2222-3333-4444-555555555555",
+  "detail-type": "Transcribe Job State Change",
+  "source": "aws.transcribe",
+  "account": "TU_ACCOUNT_ID",
+  "time": "2025-11-11T23:59:00Z",
+  "region": "us-east-1",
+  "resources": [],
+  "detail": {
+    "TranscriptionJobName": "job-1234-uuid",
+    "TranscriptionJobStatus": "COMPLETED",
+    "OutputLocation": "s3://TU_OUTPUTS_BUCKET/job-1234-uuid.json"
+  }
 }
