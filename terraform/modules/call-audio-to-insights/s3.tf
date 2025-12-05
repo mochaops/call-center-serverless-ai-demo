@@ -46,3 +46,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "out" {
     }
   }
 }
+
+# Enable EventBridge notifications for recordings bucket
+resource "aws_s3_bucket_notification" "recordings" {
+  count  = var.create_buckets && var.recordings_bucket_name == null ? 1 : 0
+  bucket = aws_s3_bucket.recordings[0].id
+
+  eventbridge = true
+}

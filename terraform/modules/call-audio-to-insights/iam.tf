@@ -74,6 +74,10 @@ data "aws_iam_policy_document" "post_extra" {
     actions   = ["polly:SynthesizeSpeech"]
     resources = ["*"]
   }
+  statement {
+    actions   = ["aws-marketplace:ViewSubscriptions", "aws-marketplace:Subscribe"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "post_extra" {
@@ -84,4 +88,50 @@ resource "aws_iam_policy" "post_extra" {
 resource "aws_iam_role_policy_attachment" "post_extra" {
   role       = aws_iam_role.lambda_post.name
   policy_arn = aws_iam_policy.post_extra.arn
+}
+
+# Step Function IAM Role and Policy
+data "aws_iam_policy_document" "step_function_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["states.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "step_function_role" {
+  name               = "${var.project}-step-function-role"
+  assume_role_policy = data.aws_iam_policy_document.step_function_assume_role.json
+}
+
+data "aws_iam_policy_document" "step_function_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:InvokeFunction",
+      "lambda:InvokeAsync"
+    ]
+    resources = [
+      aws_lambda_function.ingest.arn,
+      aws_lambda_function.post.arn
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject"
+    ]
+    resources = [
+      "arn:aws:s3:::${local.recordings_bucket_name}/*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "step_function_role_policy" {
+  name   = "${var.project}-step-function-policy"
+  role   = aws_iam_role.step_function_role.id
+  policy = data.aws_iam_policy_document.step_function_policy.json
 }

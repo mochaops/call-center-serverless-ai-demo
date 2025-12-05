@@ -16,16 +16,9 @@ def _extract_text_from_transcript(transcript_json):
         return ""
 
 def lambda_handler(event, context):
-    # EventBridge detail => incluye TranscriptionJobName y OutputLocation (S3)
-    detail = event.get("detail", {})
-    uri = detail.get("OutputLocation")
-    if not uri:
-        # Si no viene en evento, podríamos llamar GetTranscriptionJob y leer 'TranscriptFileUri'
-        return {"error": "No OutputLocation in event"}
-
-    parsed = urlparse(uri)
-    bucket = parsed.netloc
-    key    = parsed.path.lstrip("/")
+    bucket = OUTPUTS_BUCKET
+    key    = event["TranscriptionJobName"] + ".json"
+    print(f"Processing transcription job result s3://{bucket}/{key}")
 
     obj = s3.get_object(Bucket=bucket, Key=key)
     transcript_json = json.loads(obj["Body"].read())
@@ -44,7 +37,7 @@ def lambda_handler(event, context):
     2) Propongas UNA acción concreta para el negocio.
     3) Clasifiques si la llamada es de carácter PERSONAL o de NEGOCIOS.
 
-    Responde **EXCLUSIVAMENTE** con un JSON válido con esta estructura:
+    Responde **EXCLUSIVAMENTE** con un JSON válido con esta estructura, los valores del json deben ser **SOLAMENTE** cadenas de texto:
 
     {{
     "summary": "<resumen en español>",
@@ -75,6 +68,7 @@ def lambda_handler(event, context):
 
     model_response = json.loads(response["body"].read())   
     output = json.loads(model_response["content"][0]["text"].strip())
+    print(f"Bedrock model output: {output}")
 
     # normalizar
     if output["call_type"] not in ["personal", "negocios"]:
@@ -83,21 +77,21 @@ def lambda_handler(event, context):
     is_personal_call = (output["call_type"] == "personal")
     # 3) Audio con Polly (voz Lucia)
     speech = polly.synthesize_speech(Text=output["summary"][:3000], OutputFormat="mp3", VoiceId="Lucia")
-    audio_key = f"outputs/audio/{detail['TranscriptionJobName']}.mp3"
+    audio_key = f"outputs/audio/{event['TranscriptionJobName']}.mp3"
     s3.put_object(Body=speech["AudioStream"].read(), Bucket=OUTPUTS_BUCKET, Key=audio_key)
 
     # 4) Guardar resultado JSON final (sentimiento + resumen + paths)
     result = {
-        "transcription_job": detail.get("TranscriptionJobName"),
+        "transcription_job": event.get("TranscriptionJobName"),
         "sentiment": senti,
         "summary": output["summary"],
         "suggested_action": output["suggested_action"],
         "call_type": output["call_type"],             
         "is_personal_call": is_personal_call, # True si se clasificó como personal
-        "transcript_s3": uri,
+        "transcript_s3": f"s3://{bucket}/{key}",
         "audio_s3": f"s3://{OUTPUTS_BUCKET}/{audio_key}"
     }
-    result_key = f"outputs/json/{detail['TranscriptionJobName']}.json"
+    result_key = f"outputs/json/{event['TranscriptionJobName']}.json"
     s3.put_object(
         Bucket=OUTPUTS_BUCKET,
         Key=result_key,
