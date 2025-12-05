@@ -17,14 +17,6 @@ def _extract_text_from_transcript(transcript_json):
 
 def lambda_handler(event, context):
     bucket = OUTPUTS_BUCKET
-    # List objects in the bucket to verify contents
-    response = s3.list_objects_v2(Bucket=bucket)
-    if 'Contents' in response:
-        print(f"Objects in bucket {bucket}:")
-        for obj in response['Contents']:
-            print(f"  - {obj['Key']}")
-    else:
-        print(f"No objects found in bucket {bucket}")
     key    = event["TranscriptionJobName"] + ".json"
     print(f"Processing transcription job result s3://{bucket}/{key}")
 
@@ -45,7 +37,7 @@ def lambda_handler(event, context):
     2) Propongas UNA acción concreta para el negocio.
     3) Clasifiques si la llamada es de carácter PERSONAL o de NEGOCIOS.
 
-    Responde **EXCLUSIVAMENTE** con un JSON válido con esta estructura:
+    Responde **EXCLUSIVAMENTE** con un JSON válido con esta estructura, los valores del json deben ser **SOLAMENTE** cadenas de texto:
 
     {{
     "summary": "<resumen en español>",
@@ -76,6 +68,7 @@ def lambda_handler(event, context):
 
     model_response = json.loads(response["body"].read())   
     output = json.loads(model_response["content"][0]["text"].strip())
+    print(f"Bedrock model output: {output}")
 
     # normalizar
     if output["call_type"] not in ["personal", "negocios"]:
