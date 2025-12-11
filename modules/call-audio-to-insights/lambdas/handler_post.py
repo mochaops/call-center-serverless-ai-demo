@@ -19,7 +19,7 @@ OUTPUTS_BUCKET  = os.environ["OUTPUTS_BUCKET"]
 BEDROCK_MODELID = os.environ["BEDROCK_MODELID"]
 
 # Initialize Metrics
-metrics = Metrics(service=os.environ["PROJECT_NAME"], namespace="call-insights")
+metrics = Metrics(service="call-insights", namespace=os.environ["PROJECT_NAME"])
 
 def _extract_text_from_transcript(transcript_json):
     try:
@@ -129,5 +129,7 @@ def lambda_handler(event, context):
         metrics.add_metric(name="personalCall", unit=MetricUnit.Count, value=1)
     elif output["call_type"] is "business":
         metrics.add_metric(name="businessCall", unit=MetricUnit.Count, value=1)
+    else:
+        metrics.add_metric(name="unknownCall", unit=MetricUnit.Count, value=1)
 
     return {"ok": True, "result_key": result_key}
