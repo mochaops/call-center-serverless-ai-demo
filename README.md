@@ -48,7 +48,7 @@ Below is the conceptual architecture illustrating the full flow from audio input
 
 ### General Architecture Diagram
 
-```mermaid
+```
 flowchart TD
 
     A[📞 Audio Input (S3 Upload / AWS Connect)] --> B[🔊 Lambda - Audio Normalization]
@@ -63,6 +63,7 @@ flowchart TD
     D --> G[📁 S3 - Store Insights & Transcripts]
 
     F --> H[📊 Dashboard / Analytics]
+```
 
 ## Step Functions Pipeline
 ```
