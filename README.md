@@ -1,68 +1,82 @@
-aws polly synthesize-speech \
-  --voice-id Miguel \
-  --output-format mp3 \
-  --text "Hola, solo quiero quejarme mucho de los repartidores que dejaron mi paquete afuera de mi domicilio y no preguntaron por mi, muy poco profesionales." \
-  prueba-miguel.mp3
+# 🎧 Call Center Serverless AI Demo
 
-aws polly synthesize-speech \
-  --voice-id Enrique \
-  --output-format mp3 \
-  --text "Este es un mensaje de prueba. Estoy llamando a la línea de soporte. Por favor grabe este mensaje." \
-  prueba-enrique.mp3
+Transform call audio into **transcriptions**, **insights**, and **structured data** using AI and modern **serverless architecture**.  
+This project provides a solid foundation for demos, PoCs, and production-ready call-analysis systems powered by AWS and LLMs.
 
+---
 
-{
-  "Records": [
-    {
-      "eventVersion": "2.1",
-      "eventSource": "aws:s3",
-      "awsRegion": "us-east-1",
-      "eventTime": "2025-11-11T23:50:00.000Z",
-      "eventName": "ObjectCreated:Put",
-      "userIdentity": {
-        "principalId": "AWS:EXAMPLE"
-      },
-      "requestParameters": {
-        "sourceIPAddress": "10.0.0.1"
-      },
-      "responseElements": {
-        "x-amz-request-id": "ABCDEFG123456",
-        "x-amz-id-2": "XYZexample123/abcdefghijklmn"
-      },
-      "s3": {
-        "s3SchemaVersion": "1.0",
-        "configurationId": "lambda-trigger",
-        "bucket": {
-          "name": "ia-demo-connect-recordings-d1a2db35",
-          "ownerIdentity": {
-            "principalId": "EXAMPLE"
-          },
-          "arn": "arn:aws:s3:::ia-demo-connect-recordings-d1a2db35"
-        },
-        "object": {
-          "key": "record_a.m4a",
-          "size": 24960,
-          "eTag": "7eeb2f5769a447f8a475b8c881ca32f7",
-          "sequencer": "00123456789ABCDEFFEDCBA987654321"
-        }
-      }
+## 📚 Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+  - [General Architecture Diagram](#general-architecture-diagram)
+  - [Optional Step Functions Pipeline](#optional-step-functions-pipeline)
+- [Repository Structure](#repository-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Sample Output (JSON)](#sample-output-json)
+- [Use Cases](#use-cases)
+- [Contributing](#contributing)
+- [Limitations](#limitations)
+- [License](#license)
+
+---
+
+## 🧠 Overview
+
+This project demonstrates an end-to-end flow that processes call audio files and generates structured intelligence:
+
+- 🔊 **Automatic transcription**
+- 🤖 **Insight extraction using LLMs**
+- 😃 **Sentiment analysis**
+- 📝 **Intelligent summarization**
+- 🧩 **Entity extraction**
+- 📦 **Structured JSON output**
+
+The system is modular and designed to integrate with:
+
+- AWS Lambda  
+- AWS Transcribe / Whisper / Amazon Bedrock  
+- AWS Step Functions  
+- Amazon S3   
+
+---
+
+## 🏗️ Architecture
+
+Below is the conceptual architecture illustrating the full flow from audio input to AI-generated insights.
+
+### General Architecture Diagram
+
+```mermaid
+flowchart TD
+
+    A[📞 Audio Input (S3 Upload / AWS Connect)] --> B[🔊 Lambda - Audio Normalization]
+
+    B --> C[📝 Transcription Engine<br/>AWS Transcribe / Bedrock]
+
+    C --> D[🤖 AI Insights Processor (Lambda + Bedrock)]
+
+    D --> E[📦 Structured Output (JSON)]
+
+    E --> F[(🗄️ DynamoDB / OpenSearch)]
+    D --> G[📁 S3 - Store Insights & Transcripts]
+
+    F --> H[📊 Dashboard / Analytics]
+
+## Step Functions Pipeline
+```
+stateDiagram-v2
+    [*] --> UploadAudio
+    UploadAudio --> NormalizeAudio
+    NormalizeAudio --> TranscribeAudio
+    TranscribeAudio --> GenerateInsights
+    GenerateInsights --> StoreResults
+    StoreResults --> [*]
+
+    state GenerateInsights {
+        [*] --> CallLLM
+        CallLLM --> ParseResponse
+        ParseResponse --> [*]
     }
-  ]
-}
-
-
-{
-  "version": "0",
-  "id": "11111111-2222-3333-4444-555555555555",
-  "detail-type": "Transcribe Job State Change",
-  "source": "aws.transcribe",
-  "account": "TU_ACCOUNT_ID",
-  "time": "2025-11-11T23:59:00Z",
-  "region": "us-east-1",
-  "resources": [],
-  "detail": {
-    "TranscriptionJobName": "job-1234-uuid",
-    "TranscriptionJobStatus": "COMPLETED",
-    "OutputLocation": "s3://TU_OUTPUTS_BUCKET/job-1234-uuid.json"
-  }
-}
+```
