@@ -3,6 +3,12 @@
 Transform call audio into **transcriptions**, **insights**, and **structured data** using AI and modern **serverless architecture**.  
 This project provides a solid foundation for demos, PoCs, and production-ready call-analysis systems powered by AWS and LLMs.
 
+## Notes
+This project was authored by the maintainer. AI-assisted coding tools were used
+to accelerate development, with all logic reviewed and validated manually.
+
+Some visuals and modules were created using AI image generation tools to support learning.
+
 ---
 
 ## 📚 Table of Contents
